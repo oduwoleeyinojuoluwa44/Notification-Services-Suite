@@ -1,6 +1,7 @@
 // api_gateway/src/handlers/notification.handler.js
 const { sendToQueue } = require('../../services/rabbitmq.service');
 const config = require('../../config/config');
+const { successResponse, errorResponse } = require('../utils/response');
 
 // Mock fetch function for external services
 async function mockFetch(url, options) {
@@ -51,26 +52,6 @@ async function sendNotification(request, reply) {
     const correlationId = request.id; // Get correlation ID from request
     const log = request.log; // Use the logger from the request
 
-    // 1. Validate fields
-    if (typeof user_id !== 'number' || !template_id || !notification_type || typeof variables !== 'object') {
-        log.warn({ user_id, template_id, notification_type, variables }, 'Validation failed for notification request');
-        return reply.code(400).send({
-            success: false,
-            error: 'Validation Error',
-            message: 'Missing or invalid required fields: user_id (number), template_id (string), notification_type (string), variables (object)',
-            meta: {}
-        });
-    }
-
-    if (!['email', 'push'].includes(notification_type)) {
-        log.warn({ notification_type }, 'Invalid notification_type provided');
-        return reply.code(400).send({
-            success: false,
-            error: 'Validation Error',
-            message: 'Invalid notification_type. Must be "email" or "push".',
-            meta: {}
-        });
-    }
 
     try {
         // 2. Mock fetch user data
@@ -81,12 +62,10 @@ async function sendNotification(request, reply) {
         if (!userResponse.ok) {
             const errorData = await userResponse.json();
             log.error({ user_id, status: userResponse.status, errorData }, 'Failed to mock fetch user data');
-            return reply.code(userResponse.status).send({
-                success: false,
-                error: 'User Service Error',
-                message: `Failed to fetch user data: ${errorData.message || 'Unknown error'}`,
-                meta: {}
-            });
+            return reply.code(userResponse.status).send(errorResponse(
+                'User Service Error',
+                `Failed to fetch user data: ${errorData.message || 'Unknown error'}`
+            ));
         }
         const userData = (await userResponse.json()).data;
         log.info({ user_id, userData }, 'Mock user data fetched successfully');
@@ -100,12 +79,10 @@ async function sendNotification(request, reply) {
         if (!templateResponse.ok) {
             const errorData = await templateResponse.json();
             log.error({ template_id, status: templateResponse.status, errorData }, 'Failed to mock fetch template data');
-            return reply.code(templateResponse.status).send({
-                success: false,
-                error: 'Template Service Error',
-                message: `Failed to fetch template data: ${errorData.message || 'Unknown error'}`,
-                meta: {}
-            });
+            return reply.code(templateResponse.status).send(errorResponse(
+                'Template Service Error',
+                `Failed to fetch template data: ${errorData.message || 'Unknown error'}`
+            ));
         }
         const templateData = (await templateResponse.json()).data;
         log.info({ template_id, templateData }, 'Mock template data fetched successfully');
@@ -134,25 +111,21 @@ async function sendNotification(request, reply) {
         await sendToQueue(queueName, message);
 
         // 6. Return JSON response with 202 Accepted
-        reply.code(202).send({
-            success: true,
-            data: {
+        reply.code(202).send(successResponse(
+            {
                 notification_id: correlationId, // Using correlationId as a temporary notification ID
                 status: 'accepted',
                 queue: queueName
             },
-            message: 'Notification request accepted and queued for processing.',
-            meta: {}
-        });
+            'Notification request accepted and queued for processing.'
+        ));
 
     } catch (error) {
         log.error({ error, user_id, template_id, notification_type }, 'Error processing notification request');
-        reply.code(500).send({
-            success: false,
-            error: 'Internal Server Error',
-            message: 'Failed to process notification request due to an internal error.',
-            meta: {}
-        });
+        reply.code(500).send(errorResponse(
+            'Internal Server Error',
+            'Failed to process notification request due to an internal error.'
+        ));
     }
 }
 

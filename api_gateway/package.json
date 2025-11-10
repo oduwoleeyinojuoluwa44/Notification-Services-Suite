@@ -7,7 +7,7 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test tests/*.test.js"
   },
   "keywords": [],
   "author": "",
@@ -19,7 +19,6 @@
     "dotenv": "^17.2.3",
     "fastify": "^5.6.2",
     "fastify-plugin": "^5.1.0",
-    "pino": "^10.1.0",
     "pino-pretty": "^13.1.2",
     "uuid": "^13.0.0"
   }
