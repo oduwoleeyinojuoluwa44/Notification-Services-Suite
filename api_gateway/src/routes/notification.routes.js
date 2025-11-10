@@ -1,5 +1,4 @@
 // api_gateway/src/routes/notification.routes.js
-const fp = require('fastify-plugin');
 const { sendNotification } = require('../handlers/notification.handler');
 
 async function notificationRoutes(fastify, options) {
@@ -19,4 +18,4 @@ async function notificationRoutes(fastify, options) {
     fastify.post('/send', { schema: sendNotificationSchema, handler: sendNotification });
 }
 
-module.exports = fp(notificationRoutes);
+module.exports = notificationRoutes;
