@@ -48,6 +48,9 @@ export class EmailService {
                 html: finalHtml,
             })
 
+            console.log('Job completed successfully: ', jobData.request_id);
+            return true;
+
 
         } catch (error) {
             console.error('Job failed: ', jobData.request_id, error.message);
