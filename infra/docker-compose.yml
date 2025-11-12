@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   rabbitmq:
     image: rabbitmq:3-management-alpine
@@ -6,8 +5,8 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
-    volumes:
-      - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+    # volumes:
+    #   - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf # Remove this volume mount
     environment:
       RABBITMQ_DEFAULT_USER: user
       RABBITMQ_DEFAULT_PASS: password
@@ -28,7 +27,7 @@ services:
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U user -d notification_db"] # Change user to 'user' and specify database
       interval: 5s
       timeout: 5s
       retries: 5
@@ -39,11 +38,10 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - user_service
-      - email_service
-      - push_service
       - template_service
       - rabbitmq
+      - redis # Add redis as a dependency for API Gateway
+      - postgres # Add postgres as a dependency for API Gateway (if it needs to track status in DB)
     networks:
       - notification_network
     environment:
@@ -51,8 +49,10 @@ services:
       RABBITMQ_PORT: 5672
       RABBITMQ_USER: user
       RABBITMQ_PASS: password
+      REDIS_URL: redis://redis:6379 # Pass Redis URL to API Gateway
   user_service:
-    build: ../user_service
+    # build: ../user_service # Comment out build to prevent building this service
+    image: busybox # Use a dummy image to prevent building and just keep it running
     command: ["tail", "-f", "/dev/null"] # Disable user_service for local development
     depends_on:
       postgres:
@@ -60,12 +60,14 @@ services:
       rabbitmq:
         condition: service_started
   email_service:
-    build: ../email_service
+    # build: ../email_service # Comment out build to prevent building this service
+    image: busybox # Use a dummy image to prevent building and just keep it running
     command: ["tail", "-f", "/dev/null"] # Disable email_service for local development
     depends_on:
       - rabbitmq
   push_service:
-    build: ../push_service
+    # build: ../push_service # Comment out build to prevent building this service
+    image: busybox # Use a dummy image to prevent building and just keep it running
     command: ["tail", "-f", "/dev/null"] # Disable push_service for local development
     depends_on:
       - rabbitmq
