@@ -1,13 +1,13 @@
 // api_gateway/middlewares/correlation.middleware.js
-import fp from 'fastify-plugin';
-import { v4 as uuidv4 } from 'uuid';
-import config from '../config/config.js';
+const fp = require('fastify-plugin');
+const crypto = require('crypto');
+const config = require('../config/config');
 
 async function correlationIdMiddleware(fastify, options) {
     fastify.addHook('onRequest', (request, reply, done) => {
         let correlationId = request.headers[config.CORRELATION_ID_HEADER];
         if (!correlationId) {
-            correlationId = uuidv4();
+            correlationId = crypto.randomUUID();
         }
         request.id = correlationId; // Attach to request object
         reply.header(config.CORRELATION_ID_HEADER, correlationId); // Add to response header
@@ -15,4 +15,4 @@ async function correlationIdMiddleware(fastify, options) {
     });
 }
 
-export default fp(correlationIdMiddleware);
+module.exports = fp(correlationIdMiddleware);

@@ -1,5 +1,6 @@
 // api_gateway/src/server.js
 const fastify = require('fastify');
+const crypto = require('crypto');
 const config = require('../config/config');
 const cors = require('@fastify/cors');
 const helmet = require('@fastify/helmet');
@@ -28,7 +29,7 @@ const buildServer = () => {
             const errorMessage = errors.map(err => err.message).join(', ');
             return new Error(errorMessage);
         },
-        genReqId: (req) => req.headers[config.CORRELATION_ID_HEADER] || require('uuid').v4(),
+        genReqId: (req) => req.headers[config.CORRELATION_ID_HEADER] || crypto.randomUUID(),
     });
 
     // Initialize Redis client
