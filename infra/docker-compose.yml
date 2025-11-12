@@ -16,6 +16,8 @@ services:
     image: redis:6-alpine
     ports:
       - "6379:6379"
+    networks:
+      - notification_network
   postgres:
     image: postgres:13-alpine
     ports:
@@ -49,7 +51,9 @@ services:
       RABBITMQ_PORT: 5672
       RABBITMQ_USER: user
       RABBITMQ_PASS: password
-      REDIS_URL: redis://redis:6379 # Pass Redis URL to API Gateway
+      RABBITMQ_URL: amqp://user:password@rabbitmq:5672
+      PORT: 8080
+      REDIS_URL: redis://redis:6379
   user_service:
     # build: ../user_service # Comment out build to prevent building this service
     image: busybox # Use a dummy image to prevent building and just keep it running
