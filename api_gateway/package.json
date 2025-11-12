@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "The API Gateway acts as the single entry point for all client requests into the microservices ecosystem. It handles request routing, composition, and protocol translation.",
   "main": "src/server.js",
-  "type": "module",
   "directories": {
     "test": "tests"
   },

@@ -1,4 +1,4 @@
-const { getChannel, getExchangeName } = require('../services/rabbitmq.service');
+const { getChannel, getExchangeName } = require('../../services/rabbitmq.service');
 
 const publishToQueue = async (routingKey, message) => {
     try {
