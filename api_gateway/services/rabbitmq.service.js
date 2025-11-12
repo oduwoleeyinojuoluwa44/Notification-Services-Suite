@@ -8,7 +8,7 @@ const EXCHANGE_NAME = 'notifications.direct';
 const connectRabbitMQ = async () => {
     try {
         // Use the RABBITMQ_URL from config
-        connection = await amqp.connect(config.rabbitmq.url);
+        connection = await amqp.connect(config.RABBITMQ_URL);
         channel = await connection.createChannel();
         await channel.assertExchange(EXCHANGE_NAME, 'direct', { durable: true });
         console.log('Connected to RabbitMQ and asserted exchange.');
