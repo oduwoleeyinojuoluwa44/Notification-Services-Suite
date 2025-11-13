@@ -12,6 +12,12 @@ async function authMiddleware(fastify, options) {
         if (request.url === '/health') {
             return;
         }
+        
+        // Skip authentication for testing (remove in production)
+        // TODO: Remove this in production and require proper JWT tokens
+        if (process.env.SKIP_AUTH === 'true') {
+            return;
+        }
 
         const authHeader = request.headers.authorization;
 

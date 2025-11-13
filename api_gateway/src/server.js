@@ -35,6 +35,11 @@ const buildServer = () => {
     // Initialize Redis client
     const redis = new Redis(config.REDIS_URL);
     app.decorate('redis', redis); // Decorate Fastify instance with Redis client
+    
+    // Attach Redis to each request
+    app.addHook('onRequest', async (request, reply) => {
+        request.redis = redis;
+    });
 
     app.addHook('onClose', async (instance) => {
         await instance.redis.quit();

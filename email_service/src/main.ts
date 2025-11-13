@@ -15,10 +15,13 @@ async function bootstrap() {
       options: {
         urls: [rabbitMqUrl],
         queue: 'email_queue',
-        noAck: false,
         queueOptions: {
           durable: true,
-        }
+        },
+        socketOptions: {
+          heartbeatIntervalInSeconds: 60,
+          reconnectTimeInSeconds: 5,
+        },
       }
     }
   );
