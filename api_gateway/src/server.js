@@ -77,12 +77,12 @@ const buildServer = () => {
     app.register(loggerPlugin); // Register logger as a plugin (now only adds hooks)
     app.register(authPlugin); // Register authentication middleware
 
-    // Register routes
-    app.register(require('./routes/notification.routes'), { prefix: '/notifications' });
+    // Register routes with /api/v1 prefix
+    app.register(require('./routes/notification.routes'), { prefix: '/api/v1/notifications' });
     // app.register(routes); // Original registration, keeping direct for now
 
     // Health check route
-    app.get('/health', async (request, reply) => {
+    app.get('/api/v1/health', async (request, reply) => {
         reply.send({ status: 'ok' });
     });
 

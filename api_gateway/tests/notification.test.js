@@ -24,11 +24,11 @@ test('API Gateway Health Check', async (t) => {
 
     const response = await app.inject({
         method: 'GET',
-        url: '/health',
+        url: '/api/v1/health',
     });
 
-    assert.strictEqual(response.statusCode, 200, 'GET /health should return 200 OK');
-    assert.deepStrictEqual(JSON.parse(response.payload), { status: 'ok' }, 'GET /health should return { status: "ok" }');
+    assert.strictEqual(response.statusCode, 200, 'GET /api/v1/health should return 200 OK');
+    assert.deepStrictEqual(JSON.parse(response.payload), { status: 'ok' }, 'GET /api/v1/health should return { status: "ok" }');
 });
 
 test('POST /notifications/send with valid body returns 202', async (t) => {
@@ -49,7 +49,7 @@ test('POST /notifications/send with valid body returns 202', async (t) => {
 
     const response = await app.inject({
         method: 'POST',
-        url: '/notifications/send',
+        url: '/api/v1/notifications/send',
         headers: {
             [config.CORRELATION_ID_HEADER]: correlationId,
             'Content-Type': 'application/json',
@@ -82,7 +82,7 @@ test('POST /notifications/send with invalid notification_type returns 400', asyn
 
     const response = await app.inject({
         method: 'POST',
-        url: '/notifications/send',
+        url: '/api/v1/notifications/send',
         headers: {
             [config.CORRELATION_ID_HEADER]: correlationId,
             'Content-Type': 'application/json',
@@ -113,7 +113,7 @@ test('POST /notifications/send with missing required fields returns 400', async 
 
     const response = await app.inject({
         method: 'POST',
-        url: '/notifications/send',
+        url: '/api/v1/notifications/send',
         headers: {
             [config.CORRELATION_ID_HEADER]: correlationId,
             'Content-Type': 'application/json',
