@@ -4,7 +4,7 @@ This document shows how a notification request flows through the system, startin
 
 ---
 
-## 🎯 System Architecture Overview
+## 🎯 System Architecture Overview.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
