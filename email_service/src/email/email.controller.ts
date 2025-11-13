@@ -1,10 +1,12 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Logger } from '@nestjs/common';
 import { Ctx, MessagePattern, Payload, RmqContext, Transport } from '@nestjs/microservices';
 import { EmailService } from './email.service';
 import type { EmailJobData } from './interfaces/email.types';
 
 @Controller()
 export class EmailController {
+    private readonly logger = new Logger(EmailController.name);
+
     constructor(private readonly emailService: EmailService) {}
 
     @MessagePattern('email_queue', Transport.RMQ)
@@ -16,7 +18,8 @@ export class EmailController {
             await this.emailService.processEmailJob(data);
             channel.ack(originalMessage);
         } catch (error) {
-            channel.nack(originalMessage, false, false);
+            this.logger.error(`Error processing email job ${data.correlation_id}:`, error);
+            channel.nack(originalMessage, false, true);
         }
     }
 }

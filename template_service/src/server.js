@@ -33,11 +33,10 @@ const buildServer = () => {
     });
     app.register(helmet);
 
-    // Register template routes
-    app.register(templateRoutes, { prefix: '/templates' });
+    app.register(templateRoutes, { prefix: '/api/v1/templates' });
 
     // Health check route
-    app.get('/health', async (request, reply) => {
+    app.get('/api/v1/health', async (request, reply) => {
         try {
             // Attempt a simple query to check DB connection
             await query('SELECT 1');

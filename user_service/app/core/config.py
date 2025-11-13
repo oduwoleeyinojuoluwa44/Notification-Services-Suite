@@ -13,6 +13,7 @@ class UserServiceSettings(BaseSettings):
     REDIS_PORT: int = 6379  # Default Redis port
     USER_SERVICE_REDIS_DB: int = 0  # Default Redis database number
     REDIS_PASSWORD: Optional[str] = None
+    ALGORITHM: str = "HS256"
     SECRET_KEY: str
 
     class Config:

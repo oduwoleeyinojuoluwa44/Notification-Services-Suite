@@ -2,9 +2,8 @@
 const fp = require('fastify-plugin');
 
 async function apiRoutes(fastify, options) {
-    fastify.register(require('./notification.routes'), { prefix: '/notifications' });
-    // Add other route registrations here if needed, e.g.:
-    // fastify.register(require('./user.routes'), { prefix: '/users' });
+    fastify.register(require('./notification.routes'), { prefix: '/api/v1/notifications' });
+    
 }
 
 module.exports = fp(apiRoutes);
