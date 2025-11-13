@@ -10,8 +10,8 @@ class UserServiceSettings(BaseSettings):
     DEBUG: bool = False
     DATABASE_URL: str
     REDIS_URL: str
-    REDIS_PORT: int
-    USER_SERVICE_REDIS_DB: int
+    REDIS_PORT: int = 6379  # Default Redis port
+    USER_SERVICE_REDIS_DB: int = 0  # Default Redis database number
     REDIS_PASSWORD: Optional[str] = None
     SECRET_KEY: str
 
