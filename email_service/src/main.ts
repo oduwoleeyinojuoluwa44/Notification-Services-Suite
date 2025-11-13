@@ -6,7 +6,7 @@ import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  const configService = app.get(ConfigService)
+  const configService = app.get(ConfigService);
   const rabbitMqUrl = configService.getOrThrow<string>('RABBITMQ_URL');
   const port = configService.getOrThrow<number>('PORT');
 
