@@ -64,18 +64,3 @@ class PasswordUpdate(BaseModel):
         if len(np) < 8:
             raise ValueError('Password must be at least 8 characters long')
         return np
-
-
-class UserRegister(BaseModel):
-    name: str
-    email: EmailStr
-    push_token: Optional[str] = None
-    preferences: UserPreference
-    password: str
-
-    @field_validator('password')
-    def password_strength(cls, p):
-        if len(p) < 8:
-            raise ValueError('Password must be at least 8 characters long')
-        return p
-

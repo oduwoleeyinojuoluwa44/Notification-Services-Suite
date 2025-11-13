@@ -14,7 +14,6 @@ class UserServiceSettings(BaseSettings):
     USER_SERVICE_REDIS_DB: int
     REDIS_PASSWORD: Optional[str] = None
     SECRET_KEY: str
-    ALGORITHM: str = "HS256"
 
     class Config:
         env_file = ".env"

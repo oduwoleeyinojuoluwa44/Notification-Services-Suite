@@ -23,14 +23,14 @@ The User Service is responsible for managing all user-related data and operation
 - `JWT_SECRET`: Secret key for generating and validating JWT tokens.
 
 ## The endpoints the service will expose (just list them, no code)
-- `POST /api/v1/users/`
+- `POST /api/v1/users/create-user`
 - `GET /api/v1/users/{user_id}`
 - `DELETE /api/v1/users/{user_id}`
 - `GET /api/v1/users/email/{email}`
 - `PUT /api/v1/users/update-push-token/{user_id}`
 - `GET /api/v1/users/preferences/{user_id}`
 - `PUT /api/v1/users/preferences/{user_id}`
-- `POST /api/v1/users/login
+- `POST /api/v1/users/verify-password`
 - `PUT /api/v1/users/update-password/{user_id}`
 - `GET /api/v1/users/all/users`
 

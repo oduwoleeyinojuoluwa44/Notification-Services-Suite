@@ -3,9 +3,8 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.schema.response import APIResponse, PaginationMeta
-from app.schema.user import UserRegister, UserCreate, UserResponse, UserUpdate, UserPreferenceResponse, UserPreference, PasswordVerify, PasswordUpdate
+from app.schema.user import UserCreate, UserResponse, UserUpdate, UserPreferenceResponse, UserPreference, PasswordVerify, PasswordUpdate
 from app.services.user_service import UserService
-from app.core.security import create_access_token
 import sqlalchemy, redis
 from functools import wraps
 import math
@@ -49,62 +48,15 @@ def handle_api_exceptions(func):
 
 @router.post("/", response_model=APIResponse, status_code=201)
 @handle_api_exceptions
-def register_user(reg_user: UserRegister, db: Session = Depends(get_db)):
-    new_user = UserService.create_user(db, reg_user)
-
-    access_token = create_access_token(
-        data={
-            "sub": str(new_user.id),
-            "email": new_user.email
-            })
+def create_user(user: UserCreate, db: Session = Depends(get_db)):
+    new_user = UserService.create_user(db, user)
 
     user_response = UserResponse.model_validate(new_user)
-
     return APIResponse(
         success=True,
-        data={
-            "access_token": access_token,
-            "token_type": "bearer",
-            "user": user_response
-        },
-        message="User registered successfully."
+        data=user_response, 
+        message="User created successfully."
     )
-
-@router.post("/login", response_model=APIResponse)
-@handle_api_exceptions
-def login_user(login_user: PasswordVerify, db: Session = Depends(get_db)):
-    user = UserService.verify_user_password(db, login_user)
-    access_token = create_access_token(
-        data={
-            "sub": str(user.id),
-            "email": user.email
-            })
-
-    user_response = UserResponse.model_validate(user)
-
-    return APIResponse(
-        success=True,
-        data={
-            "access_token": access_token,
-            "token_type": "bearer",
-            "user": user_response
-        },
-        message="User logged in successfully."
-    )
-
-
-#this is the prev create user endpoint, made the register endpoint above to replace it
-# @router.post("/create", response_model=APIResponse, status_code=201)
-# @handle_api_exceptions
-# def create_user(user: UserCreate, db: Session = Depends(get_db)):
-#     new_user = UserService.create_user(db, user)
-
-#     user_response = UserResponse.model_validate(new_user)
-#     return APIResponse(
-#         success=True,
-#         data=user_response, 
-#         message="User created successfully."
-#     )
     
     
 @router.get("/{user_id}", response_model=APIResponse)
@@ -164,18 +116,16 @@ def update_user_preferences(user_id: str, preferences: UserPreference, db: Sessi
         message="User preferences updated successfully."
     )
 
-
-#I also replaced this with a logi endpoint instead
-# @router.post("/verify-password", response_model=APIResponse)
-# @handle_api_exceptions
-# def verify_user_password(password: PasswordVerify, db: Session = Depends(get_db)):
-#     user = UserService.verify_user_password(db, password)
-#     user_response = UserResponse.model_validate(user)
-#     return APIResponse(
-#         success=True,
-#         data=user_response,
-#         message="Password verified successfully."
-#     )
+@router.post("/verify-password", response_model=APIResponse)
+@handle_api_exceptions
+def verify_user_password(password: PasswordVerify, db: Session = Depends(get_db)):
+    user = UserService.verify_user_password(db, password)
+    user_response = UserResponse.model_validate(user)
+    return APIResponse(
+        success=True,
+        data=user_response,
+        message="Password verified successfully."
+    )
 
 @router.put("/update-password/{user_id}", response_model=APIResponse)
 @handle_api_exceptions
