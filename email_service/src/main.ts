@@ -17,6 +17,7 @@ async function bootstrap() {
         queue: 'email_queue',
         queueOptions: {
           durable: true,
+          noAck: false,
         },
         socketOptions: {
           heartbeatIntervalInSeconds: 60,
