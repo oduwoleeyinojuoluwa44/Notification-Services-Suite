@@ -29,9 +29,10 @@ async function authMiddleware(fastify, options) {
         const token = authHeader.split(' ')[1];
 
         try {
-            const decoded = jwt.verify(token, config.JWT_SECRET);
+            const decoded = jwt.verify(token, config.JWT_SECRET, { algorithms: ['HS256'] });
             request.user = decoded; // Attach decoded user information to the request
-            request.log.info({ userId: request.user.id }, 'Authentication successful.');
+            const userId = decoded.sub || decoded.id;
+            request.log.info({ userId }, 'Authentication successful.');
         } catch (err) {
             request.log.warn({ error: err.message }, 'Invalid or expired authentication token.');
             return reply.code(401).send(errorResponse('Unauthorized', 'Invalid or expired authentication token.'));
