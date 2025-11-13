@@ -6,9 +6,6 @@ import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Set global prefix for all routes
-  app.setGlobalPrefix('api/v1');
-
   const configService = app.get(ConfigService);
   const rabbitMqUrl = configService.getOrThrow<string>('RABBITMQ_URL');
   const port = configService.getOrThrow<number>('PORT');

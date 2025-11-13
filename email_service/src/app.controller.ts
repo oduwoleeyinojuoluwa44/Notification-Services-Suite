@@ -3,7 +3,7 @@ import { HealthCheck, HealthCheckService, MicroserviceHealthIndicator } from '@n
 import { ConfigService } from '@nestjs/config';
 import { Transport } from '@nestjs/microservices';
 
-@Controller()
+@Controller('api/v1')
 export class AppController {
   constructor(
     private readonly health: HealthCheckService,

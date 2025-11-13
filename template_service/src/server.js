@@ -33,7 +33,6 @@ const buildServer = () => {
     });
     app.register(helmet);
 
-    // Register template routes with /api/v1 prefix
     app.register(templateRoutes, { prefix: '/api/v1/templates' });
 
     // Health check route

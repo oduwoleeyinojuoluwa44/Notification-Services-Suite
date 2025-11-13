@@ -9,7 +9,7 @@ async function authMiddleware(fastify, options) {
 
     fastify.addHook('preHandler', async (request, reply) => {
         // Skip authentication for health check endpoint
-        if (request.url === '/api/v1/health' || request.url === '/health') {
+        if (request.url === '/api/v1/health') {
             return;
         }
         

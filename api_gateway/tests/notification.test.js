@@ -28,7 +28,7 @@ test('API Gateway Health Check', async (t) => {
     });
 
     assert.strictEqual(response.statusCode, 200, 'GET /api/v1/health should return 200 OK');
-    assert.deepStrictEqual(JSON.parse(response.payload), { status: 'ok' }, 'GET /api/v1/health should return { status: "ok" }');
+    assert.deepStrictEqual(JSON.parse(response.payload), { status: 'ok' }, 'GET /health should return { status: "ok" }');
 });
 
 test('POST /notifications/send with valid body returns 202', async (t) => {
@@ -57,7 +57,7 @@ test('POST /notifications/send with valid body returns 202', async (t) => {
         payload: JSON.stringify(payload),
     });
 
-    assert.strictEqual(response.statusCode, 202, 'POST /notifications/send should return 202 Accepted');
+    assert.strictEqual(response.statusCode, 202, 'POST /api/v1/notifications/send should return 202 Accepted');
     const responseBody = JSON.parse(response.payload);
     assert.strictEqual(responseBody.success, true, 'Response should indicate success');
     assert.strictEqual(responseBody.data.status, 'accepted', 'Response status should be accepted');
@@ -90,7 +90,7 @@ test('POST /notifications/send with invalid notification_type returns 400', asyn
         payload: JSON.stringify(payload),
     });
 
-    assert.strictEqual(response.statusCode, 400, 'POST /notifications/send with invalid type should return 400 Bad Request');
+    assert.strictEqual(response.statusCode, 400, 'POST /api/v1/notifications/send with invalid type should return 400 Bad Request');
     const responseBody = JSON.parse(response.payload);
     assert.strictEqual(responseBody.success, false, 'Response should indicate failure');
     assert.strictEqual(responseBody.error, 'Validation Error', 'Response error should be "Validation Error"');
@@ -121,7 +121,7 @@ test('POST /notifications/send with missing required fields returns 400', async 
         payload: JSON.stringify(payload),
     });
 
-    assert.strictEqual(response.statusCode, 400, 'POST /notifications/send with missing fields should return 400 Bad Request');
+    assert.strictEqual(response.statusCode, 400, 'POST /api/v1/notifications/send with missing fields should return 400 Bad Request');
     const responseBody = JSON.parse(response.payload);
     assert.strictEqual(responseBody.success, false, 'Response should indicate failure');
     assert.strictEqual(responseBody.error, 'Validation Error', 'Response error should be "Validation Error"');
