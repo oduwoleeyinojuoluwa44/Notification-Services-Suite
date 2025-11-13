@@ -13,6 +13,7 @@ class UserServiceSettings(BaseSettings):
     REDIS_PORT: int
     USER_SERVICE_REDIS_DB: int
     REDIS_PASSWORD: Optional[str] = None
+    ALGORITHM: str = "HS256"
     SECRET_KEY: str
 
     class Config:
