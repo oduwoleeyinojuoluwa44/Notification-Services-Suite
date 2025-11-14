@@ -18,5 +18,6 @@ import { TerminusModule } from '@nestjs/terminus';
   ],
   controllers: [AppController],
   providers: [AppService],
+  exports: [SendgridModule], // Export SendgridModule so AppController can inject SendgridService
 })
 export class AppModule {}

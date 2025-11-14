@@ -1,10 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SendgridService } from '../sendgrid/sendgrid.service';
 import { EmailJobData } from './interfaces/email.types';
+import { ErrorClassifier } from './utils/error-classifier';
 
 @Injectable()
 export class EmailService {
+    private readonly logger = new Logger(EmailService.name);
     private sendgridFromEmail: string;
 
     constructor(
@@ -15,28 +17,32 @@ export class EmailService {
     }
 
     async processEmailJob(jobData: EmailJobData): Promise<boolean> {
-        console.log('Received email job:', jobData.correlation_id);
+        this.logger.log(`Processing email job: ${jobData.correlation_id}`);
 
         try {
             // Validate notification type
             if (jobData.notification_type !== 'email') {
-                console.log(`Skipping non-email notification (type: ${jobData.notification_type}) for correlation_id: ${jobData.correlation_id}`);
+                this.logger.log(`Skipping non-email notification (type: ${jobData.notification_type}) for correlation_id: ${jobData.correlation_id}`);
                 return true;
             }
 
             // Check user preferences
             if (!jobData.user_data?.preferences?.email) {
-                console.log(`User ${jobData.user_id} has disabled email notifications. Skipping...`);
+                this.logger.log(`User ${jobData.user_id} has disabled email notifications. Skipping...`);
                 return true;
             }
 
             // Validate required data
             if (!jobData.user_data?.email) {
-                throw new Error(`User email not found for user_id: ${jobData.user_id}`);
+                const error = new Error(`User email not found for user_id: ${jobData.user_id}`);
+                this.logger.error(error.message);
+                throw error;
             }
 
             if (!jobData.template_content) {
-                throw new Error(`Template content not provided for template_id: ${jobData.template_id}`);
+                const error = new Error(`Template content not provided for template_id: ${jobData.template_id}`);
+                this.logger.error(error.message);
+                throw error;
             }
 
             // Substitute variables in template content
@@ -51,7 +57,7 @@ export class EmailService {
                 });
             }
 
-            // Send email via SendGrid
+            // Send email via SendGrid (with circuit breaker protection)
             await this.sendgridService.sendEmail({
                 to: jobData.user_data.email,
                 from: this.sendgridFromEmail,
@@ -59,12 +65,24 @@ export class EmailService {
                 html: finalContent,
             });
 
-            console.log('Job completed successfully: ', jobData.correlation_id);
+            this.logger.log(`Email job ${jobData.correlation_id} completed successfully`);
             return true;
 
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            console.error('Job failed: ', jobData.correlation_id, errorMessage);
+            // Classify error for better logging
+            const classifiedError = ErrorClassifier.classify(error);
+            
+            this.logger.error({
+                correlation_id: jobData.correlation_id,
+                error_type: classifiedError.type,
+                error_message: classifiedError.message,
+                user_id: jobData.user_id,
+                email: jobData.user_data?.email,
+                should_retry: classifiedError.shouldRetry,
+                max_retries: classifiedError.maxRetries
+            }, 'Email job processing failed');
+
+            // Re-throw error so controller can handle retry logic
             throw error;
         }
     }

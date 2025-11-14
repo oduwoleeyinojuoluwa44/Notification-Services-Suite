@@ -18,6 +18,12 @@ async function bootstrap() {
         queueOptions: {
           durable: true,
           noAck: false,
+          // Dead Letter Queue configuration
+          // Messages rejected without requeue will go to DLQ
+          arguments: {
+            'x-dead-letter-exchange': 'notifications.dlx',
+            'x-dead-letter-routing-key': 'email.failed',
+          },
         },
         socketOptions: {
           heartbeatIntervalInSeconds: 60,
