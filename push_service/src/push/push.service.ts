@@ -40,8 +40,9 @@ export class PushService {
       }
 
       if (!jobData.template_content) {
+        const templateIdentifier = jobData.template_code || jobData.template_id || 'unknown';
         throw new Error(
-          `Template content not provided for template_id: ${jobData.template_id}`,
+          `Template content not provided for template: ${templateIdentifier}`,
         );
       }
 

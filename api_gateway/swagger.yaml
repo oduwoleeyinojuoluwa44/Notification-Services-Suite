@@ -17,20 +17,19 @@ components:
       type: object
       required:
         - user_id
-        - template_id
+        - template_code
         - notification_type
         - variables
       properties:
         user_id:
-          type: integer
-          format: int64
-          description: The ID of the user to send the notification to.
-          example: 123
-        template_id:
           type: string
           format: uuid
-          description: The ID of the template to use for the notification.
-          example: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+          description: The UUID of the user to send the notification to.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        template_code:
+          type: string
+          description: The template code/name to use for the notification (e.g., "welcome_email").
+          example: "welcome_email"
         notification_type:
           type: string
           enum:
@@ -40,18 +39,45 @@ components:
           example: "email"
         variables:
           type: object
-          additionalProperties:
-            type: string
-          description: Key-value pairs for variable substitution in the template.
+          description: Variables for template substitution (UserData format).
+          properties:
+            name:
+              type: string
+              description: User's name
+              example: "John Doe"
+            link:
+              type: string
+              format: uri
+              description: URL link to include in notification
+              example: "https://example.com/welcome"
+            meta:
+              type: object
+              description: Optional metadata
+              additionalProperties: true
+          required:
+            - name
+            - link
+        request_id:
+          type: string
+          description: Optional unique request identifier for idempotency.
+          example: "req-12345-67890"
+        priority:
+          type: integer
+          description: Optional priority level (0-10, higher is more important).
+          example: 1
+        metadata:
+          type: object
+          description: Optional additional metadata.
+          additionalProperties: true
           example:
-            name: "John Doe"
-            product: "Awesome Product"
+            source: "api"
+            campaign: "welcome_flow"
     NotificationStatusResponse:
       type: object
       required:
         - notification_id
         - user_id
-        - template_id
+        - template_code
         - notification_type
         - status
         - timestamp
@@ -63,15 +89,14 @@ components:
           description: The unique ID of the notification request (correlation ID).
           example: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
         user_id:
-          type: integer
-          format: int64
-          description: The ID of the user.
-          example: 123
-        template_id:
           type: string
           format: uuid
-          description: The ID of the template used.
-          example: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+          description: The UUID of the user.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        template_code:
+          type: string
+          description: The template code/name used for the notification.
+          example: "welcome_email"
         notification_type:
           type: string
           enum:
@@ -205,6 +230,76 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/NotificationStatusResponse'
+        '404':
+          description: Notification status not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericErrorResponse'
+  /{notification_preference}/status:
+    post:
+      summary: Update notification status
+      tags:
+        - Notifications
+      parameters:
+        - in: path
+          name: notification_preference
+          schema:
+            type: string
+            enum: [email, push]
+          required: true
+          description: The type of notification preference (email or push).
+          example: "email"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - notification_id
+                - status
+              properties:
+                notification_id:
+                  type: string
+                  description: The unique ID of the notification request.
+                  example: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+                status:
+                  type: string
+                  enum: [delivered, pending, failed]
+                  description: The status of the notification.
+                  example: "delivered"
+                timestamp:
+                  type: string
+                  format: date-time
+                  description: Optional timestamp when the status was updated.
+                  example: "2024-01-01T12:00:00Z"
+                error:
+                  type: string
+                  description: Optional error message if status is failed.
+                  example: "Failed to send email: Invalid recipient"
+      responses:
+        '200':
+          description: Notification status updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericSuccessResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/NotificationStatusResponse'
+        '400':
+          description: Bad Request (e.g., invalid status, missing fields)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericErrorResponse'
         '404':
           description: Notification status not found.
           content:

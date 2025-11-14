@@ -1,16 +1,32 @@
-// api_gateway/src/routes/notification.routes.js
 const { sendNotification } = require('../handlers/notification.handler');
+const { updateNotificationStatus } = require('../handlers/status.handler');
 
 async function notificationRoutes(fastify, options) {
     const sendNotificationSchema = {
         body: {
             type: 'object',
-            required: ['user_id', 'template_id', 'notification_type', 'variables'],
+            required: ['user_id', 'template_code', 'notification_type', 'variables'],
             properties: {
                 user_id: { type: 'string' },
-                template_id: { type: 'string' },
+                template_code: { type: 'string' },
                 notification_type: { type: 'string', enum: ['email', 'push'] },
                 variables: { type: 'object' },
+                request_id: { type: 'string' },
+                priority: { type: 'integer' },
+                metadata: { type: 'object' },
+            },
+        },
+    };
+
+    const updateStatusSchema = {
+        body: {
+            type: 'object',
+            required: ['notification_id', 'status'],
+            properties: {
+                notification_id: { type: 'string' },
+                status: { type: 'string', enum: ['delivered', 'pending', 'failed'] },
+                timestamp: { type: 'string', format: 'date-time' },
+                error: { type: 'string' },
             },
         },
     };
@@ -37,4 +53,26 @@ async function notificationRoutes(fastify, options) {
     });
 }
 
-module.exports = notificationRoutes;
+// Export a separate function for status update routes
+async function statusRoutes(fastify, options) {
+    const updateStatusSchema = {
+        body: {
+            type: 'object',
+            required: ['notification_id', 'status'],
+            properties: {
+                notification_id: { type: 'string' },
+                status: { type: 'string', enum: ['delivered', 'pending', 'failed'] },
+                timestamp: { type: 'string', format: 'date-time' },
+                error: { type: 'string' },
+            },
+        },
+    };
+
+    // POST /api/v1/{notification_preference}/status/
+    fastify.post('/:notification_preference/status/', { 
+        schema: updateStatusSchema, 
+        handler: updateNotificationStatus 
+    });
+}
+
+module.exports = { notificationRoutes, statusRoutes };

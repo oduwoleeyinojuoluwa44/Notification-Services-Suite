@@ -5,22 +5,24 @@ const config = require('../../config/config');
 const { successResponse, errorResponse } = require('../utils/response');
 
 async function sendNotification(request, reply) {
-    const { user_id, template_id, notification_type, variables } = request.body;
-    const correlationId = request.id;
+    const { user_id, template_code, notification_type, variables, request_id, priority, metadata } = request.body;
+    const correlationId = request.id || request_id;
     const log = request.log;
-    const redis = request.redis; // Access Redis client from Fastify instance
+    const redis = request.redis;
 
     try {
-        // 1. Store initial notification status in Redis
         const notificationStatusKey = `notification:${correlationId}`;
         const initialStatus = {
             notification_id: correlationId,
             user_id,
-            template_id,
+            template_code,
             notification_type,
             status: 'PENDING',
             timestamp: new Date().toISOString(),
             details: 'Notification request received and being processed by API Gateway.',
+            request_id: request_id || null,
+            priority: priority || 0,
+            metadata: metadata || null,
         };
         await redis.set(notificationStatusKey, JSON.stringify(initialStatus), 'EX', 3600); // Store for 1 hour
 
@@ -41,18 +43,23 @@ async function sendNotification(request, reply) {
         const userData = (await userResponse.json()).data;
         log.info({ user_id, userData }, 'User data fetched successfully');
 
-        // 3. Fetch template data from Template Service
-        log.info({ template_id }, 'Fetching template data');
-        const templateServiceUrl = new URL(`${config.TEMPLATE_SERVICE_URL}/api/v1/templates/${template_id}`);
+        log.info({ template_code, notification_type }, 'Fetching template data by code');
+        const templateServiceUrl = new URL(`${config.TEMPLATE_SERVICE_URL}/api/v1/templates/search`);
+        templateServiceUrl.searchParams.append('name', template_code);
+        templateServiceUrl.searchParams.append('type', notification_type);
+        templateServiceUrl.searchParams.append('language', 'en');
+        
+        // Optional: pass variables for template substitution (though we'll do it in email service)
         if (variables && Object.keys(variables).length > 0) {
             templateServiceUrl.searchParams.append('variables', JSON.stringify(variables));
         }
+        
         const templateResponse = await fetch(templateServiceUrl.toString(), {
             headers: { [config.CORRELATION_ID_HEADER]: correlationId }
         });
         if (!templateResponse.ok) {
             const errorData = await templateResponse.json();
-            log.error({ template_id, status: templateResponse.status, errorData }, 'Failed to fetch template data');
+            log.error({ template_code, status: templateResponse.status, errorData }, 'Failed to fetch template data');
             await redis.set(notificationStatusKey, JSON.stringify({ ...initialStatus, status: 'FAILED', details: `Failed to fetch template data: ${errorData.message || 'Unknown error'}` }));
             return reply.code(templateResponse.status).send(errorResponse(
                 'Template Service Error',
@@ -60,7 +67,7 @@ async function sendNotification(request, reply) {
             ));
         }
         const templateData = (await templateResponse.json()).data;
-        log.info({ template_id, templateData }, 'Template data fetched successfully');
+        log.info({ template_code, template_id: templateData.id, templateData }, 'Template data fetched successfully');
 
 
         // 4. Determine routing key based on notification_type
@@ -79,25 +86,26 @@ async function sendNotification(request, reply) {
 
         const message = {
             user_id,
-            template_id,
+            template_id: templateData.id,
+            template_code,
             notification_type,
             variables,
-            user_data: userData, // Include fetched user data
-            template_content: templateData.content, // Include fetched template content
+            user_data: userData,
+            template_content: templateData.content,
             correlation_id: correlationId,
+            request_id: request_id || null,
+            priority: priority || 0,
+            metadata: metadata || null,
         };
 
-        // 5. Publish message to RabbitMQ
         log.info({ routingKey, message: message.correlation_id }, 'Publishing message to RabbitMQ');
         const published = await publishToQueue(routingKey, message);
 
         if (published) {
-            // Update status to QUEUED
             await redis.set(notificationStatusKey, JSON.stringify({ ...initialStatus, status: 'QUEUED', details: 'Notification message published to RabbitMQ.' }));
-            // 6. Return JSON response with 202 Accepted
             reply.code(202).send(successResponse(
                 {
-                    notification_id: correlationId, // Using correlationId as a temporary notification ID
+                    notification_id: correlationId,
                     status: 'accepted',
                     routing_key: routingKey
                 },
@@ -113,7 +121,7 @@ async function sendNotification(request, reply) {
         }
 
     } catch (error) {
-        log.error({ error, user_id, template_id, notification_type }, 'Error processing notification request');
+        log.error({ error, user_id, template_code, notification_type }, 'Error processing notification request');
         const notificationStatusKey = `notification:${correlationId}`;
         await redis.set(notificationStatusKey, JSON.stringify({ ...initialStatus, status: 'FAILED', details: `Internal server error: ${error.message}` }));
         reply.code(500).send(errorResponse(

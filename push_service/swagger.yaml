@@ -17,7 +17,6 @@ components:
       type: object
       required:
         - user_id
-        - template_id
         - notification_type
         - variables
         - user_data
@@ -25,15 +24,19 @@ components:
         - correlation_id
       properties:
         user_id:
-          type: integer
-          format: int64
-          description: The ID of the user to send the push notification to.
-          example: 123
+          type: string
+          format: uuid
+          description: The UUID of the user to send the push notification to.
+          example: "550e8400-e29b-41d4-a716-446655440000"
         template_id:
           type: string
           format: uuid
-          description: The ID of the template used for the push notification.
+          description: The ID of the template used for the push notification (optional, kept for backward compatibility).
           example: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+        template_code:
+          type: string
+          description: The template code/name used for the push notification (e.g., "welcome_push").
+          example: "welcome_push"
         notification_type:
           type: string
           enum:

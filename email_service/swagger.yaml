@@ -17,7 +17,6 @@ components:
       type: object
       required:
         - user_id
-        - template_id
         - notification_type
         - variables
         - user_data
@@ -25,15 +24,19 @@ components:
         - correlation_id
       properties:
         user_id:
-          type: integer
-          format: int64
-          description: The ID of the user to send the email to.
-          example: 123
+          type: string
+          format: uuid
+          description: The UUID of the user to send the email to.
+          example: "550e8400-e29b-41d4-a716-446655440000"
         template_id:
           type: string
           format: uuid
-          description: The ID of the template used for the email.
+          description: The ID of the template used for the email (optional, kept for backward compatibility).
           example: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+        template_code:
+          type: string
+          description: The template code/name used for the email (e.g., "welcome_email").
+          example: "welcome_email"
         notification_type:
           type: string
           enum:

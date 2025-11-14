@@ -36,7 +36,8 @@ export class EmailService {
             }
 
             if (!jobData.template_content) {
-                throw new Error(`Template content not provided for template_id: ${jobData.template_id}`);
+                const templateIdentifier = jobData.template_code || jobData.template_id || 'unknown';
+                throw new Error(`Template content not provided for template: ${templateIdentifier}`);
             }
 
             // Substitute variables in template content
