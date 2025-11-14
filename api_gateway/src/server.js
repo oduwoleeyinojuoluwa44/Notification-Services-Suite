@@ -78,8 +78,7 @@ const buildServer = () => {
     app.register(authPlugin); // Register authentication middleware
 
     // Register routes with /api/v1 prefix
-    app.register(require('./routes/notification.routes'), { prefix: '/api/v1/notifications' });
-    // app.register(routes); // Original registration, keeping direct for now
+    app.register(require('./routes/index')); // This registers all routes including notifications
 
     // Health check route
     app.get('/api/v1/health', async (request, reply) => {

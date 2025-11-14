@@ -31,6 +31,10 @@ async function notificationRoutes(fastify, options) {
         },
     };
 
+    // POST /api/v1/notifications/ (root endpoint - matches spec)
+    fastify.post('/', { schema: sendNotificationSchema, handler: sendNotification });
+    
+    // POST /api/v1/notifications/send (alternative endpoint for backward compatibility)
     fastify.post('/send', { schema: sendNotificationSchema, handler: sendNotification });
 
     fastify.get('/:notification_id/status', async (request, reply) => {
