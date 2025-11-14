@@ -1,4 +1,3 @@
-// api_gateway/src/server.js
 const fastify = require('fastify');
 const crypto = require('crypto');
 const config = require('../config/config');
@@ -7,17 +6,17 @@ const helmet = require('@fastify/helmet');
 const loggerPlugin = require('../middlewares/logger.middleware');
 const correlationIdPlugin = require('../middlewares/correlation.middleware');
 const authPlugin = require('../middlewares/auth.middleware');
-const { connectRabbitMQ } = require('../services/rabbitmq.service'); // Import RabbitMQ connection
-const rateLimit = require('@fastify/rate-limit'); // Import rate-limit plugin
-const Redis = require('ioredis'); // Import ioredis
+const { connectRabbitMQ } = require('../services/rabbitmq.service');
+const rateLimit = require('@fastify/rate-limit');
+const Redis = require('ioredis');
 const routes = require('./routes/index');
 
 const buildServer = () => {
     const app = fastify({
-        logger: { // Configure Fastify's built-in logger
+        logger: {
             level: config.LOG_LEVEL,
             transport: {
-                target: 'pino-pretty', // Use pino-pretty for development readability
+                target: 'pino-pretty',
                 options: {
                     colorize: true,
                     translateTime: 'SYS:HH:MM:ss Z',
@@ -32,11 +31,8 @@ const buildServer = () => {
         genReqId: (req) => req.headers[config.CORRELATION_ID_HEADER] || crypto.randomUUID(),
     });
 
-    // Initialize Redis client
     const redis = new Redis(config.REDIS_URL);
-    app.decorate('redis', redis); // Decorate Fastify instance with Redis client
     
-    // Attach Redis to each request
     app.addHook('onRequest', async (request, reply) => {
         request.redis = redis;
     });
@@ -46,18 +42,16 @@ const buildServer = () => {
         instance.log.info('Redis client disconnected.');
     });
 
-    // Register plugins
     app.register(cors, {
-        origin: '*', // Adjust as per your CORS policy
+        origin: '*',
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization', config.CORRELATION_ID_HEADER],
     });
     app.register(helmet);
 
-    // Register rate limiting
     app.register(rateLimit, {
-        max: 100, // Max requests per window
-        timeWindow: '1 minute', // Time window for rate limiting
+        max: 100,
+        timeWindow: '1 minute',
         errorResponseBuilder: (request, context) => {
             return {
                 success: false,
@@ -72,15 +66,12 @@ const buildServer = () => {
         },
     });
 
-    // Register custom middlewares
-    app.register(correlationIdPlugin); // Register as a plugin
-    app.register(loggerPlugin); // Register logger as a plugin (now only adds hooks)
-    app.register(authPlugin); // Register authentication middleware
+    app.register(correlationIdPlugin);
+    app.register(loggerPlugin);
+    app.register(authPlugin);
 
-    // Register routes with /api/v1 prefix
-    app.register(require('./routes/index')); // This registers all routes including notifications
+    app.register(require('./routes/index'));
 
-    // Health check route
     app.get('/api/v1/health', async (request, reply) => {
         reply.send({ status: 'ok' });
     });
