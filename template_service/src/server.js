@@ -61,6 +61,38 @@ const startServer = async () => {
     const app = buildServer();
 
     try {
+        // Initialize database schema before starting server
+        const fs = require('fs');
+        const path = require('path');
+        
+        try {
+            // Read and execute schema.sql
+            const schemaPath = path.join(__dirname, 'db', 'schema.sql');
+            const schemaSQL = fs.readFileSync(schemaPath, 'utf8');
+            
+            // Split by semicolons and execute each statement
+            const statements = schemaSQL
+                .split(';')
+                .map(s => s.trim())
+                .filter(s => s.length > 0 && !s.startsWith('--'));
+            
+            for (const statement of statements) {
+                if (statement.trim()) {
+                    try {
+                        await query(statement);
+                    } catch (stmtError) {
+                        // Ignore errors for "already exists" cases
+                        if (!stmtError.message || (!stmtError.message.includes('already exists') && !stmtError.message.includes('duplicate'))) {
+                            app.log.warn({ error: stmtError.message, statement: statement.substring(0, 50) }, 'Error executing schema statement');
+                        }
+                    }
+                }
+            }
+            app.log.info('Database schema initialized successfully');
+        } catch (dbInitError) {
+            app.log.warn({ error: dbInitError.message }, 'Error initializing database schema (may already exist)');
+        }
+        
         await app.listen({ port: config.PORT, host: '0.0.0.0' });
         app.log.info(`Template Service listening on ${app.server.address().port}`);
     } catch (err) {

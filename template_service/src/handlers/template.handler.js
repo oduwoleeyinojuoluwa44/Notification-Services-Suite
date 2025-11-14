@@ -49,8 +49,10 @@ const createTemplate = async (request, reply) => {
 
         reply.code(201).send(successResponse(newTemplate, 'Template created successfully'));
     } catch (error) {
-        request.log.error({ error, correlationId }, 'Error creating template');
-        reply.code(500).send(errorResponse('Internal Server Error', 'Failed to create template'));
+        request.log.error({ error: error.message, stack: error.stack, correlationId }, 'Error creating template');
+        // Provide more detailed error message
+        const errorMessage = error.message || 'Unknown error occurred';
+        reply.code(500).send(errorResponse('Internal Server Error', `Failed to create template: ${errorMessage}`));
     }
 };
 
